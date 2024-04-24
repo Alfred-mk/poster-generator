@@ -252,6 +252,37 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Specify the directory where guest posters are stored
+	postersDir := "guest_posters"
+	posters, err := generatePosters(postersDir)
+	if err != nil {
+		log.Fatalf("Error generating posters: %v", err)
+	}
+
+	// Create a CSV file to store the list of invites
+	csvFilePath := filepath.Join("guest_posters", "wedding_guest_list.csv")
+	csvFile, err := os.Create(csvFilePath)
+	if err != nil {
+		log.Fatalf("Error creating CSV file: %v", err)
+	}
+	defer csvFile.Close()
+
+	// Write the headers to the CSV file
+	csvWriter := csv.NewWriter(csvFile)
+	csvWriter.Write([]string{"name", "full", "url"})
+
+	// Write each poster to the CSV file
+	for _, poster := range posters {
+		err := csvWriter.Write([]string{poster.Name, poster.Full, poster.URL})
+		if err != nil {
+			log.Printf("Error writing poster to CSV: %v", err)
+			continue
+		}
+	}
+	csvWriter.Flush()
+
+	fmt.Printf("Invites list saved to %s\n", csvFilePath)
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/upload", uploadHandler)
 	mux.HandleFunc("/guests", guestHandler)
